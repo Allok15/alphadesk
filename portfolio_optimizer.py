@@ -164,14 +164,20 @@ def render_portfolio_optimizer():
                 .upper()
             )
 
-        # Build cleaned ticker list (auto .NS)
+        # Build cleaned ticker list (auto .NS, remove spaces)
         tickers = []
         for asset in st.session_state.assets:
-            t = asset["ticker"]
+            t = (asset["ticker"] or "").upper().strip()
             if not t:
                 continue
-            if "." not in t:  # default to NSE if no suffix
+
+            # remove spaces inside symbol: "TATA POWER" -> "TATAPOWER"
+            t = t.replace(" ", "")
+
+            # default to NSE if no suffix like .NS, .BO etc.
+            if "." not in t:
                 t += ".NS"
+
             tickers.append(t)
 
         if len(tickers) < 2:
@@ -218,26 +224,27 @@ def render_portfolio_optimizer():
                     quad_risk_avoid = 0.2
                     quad_gamma = 0.01
 
-                # Optimisation objective
+                 # Optimisation objective (compatible with older PyPortfolioOpt)
                 if goal_code == "min_vol":
                     weights = ef.min_volatility()
                     explain_text = (
                         "the lowest possible volatility (risk) for your universe."
                     )
+
                 elif goal_code == "max_return":
-                    ef.add_objective(
-                        objective_functions.L2_reg, gamma=quad_gamma
-                    )
-                    weights = ef.max_quadratic_utility(
-                        risk_aversion=quad_risk_avoid
-                    )
+                    # L2 regularisation only if supported by this PyPortfolioOpt version
+                    if hasattr(ef, "add_objective"):
+                        ef.add_objective(objective_functions.L2_reg, gamma=quad_gamma)
+
+                    weights = ef.max_quadratic_utility(risk_aversion=quad_risk_avoid)
                     explain_text = (
                         "maximum expected returns given your risk appetite."
                     )
+
                 else:  # "sharpe"
-                    ef.add_objective(
-                        objective_functions.L2_reg, gamma=sharpe_gamma
-                    )
+                    if hasattr(ef, "add_objective"):
+                        ef.add_objective(objective_functions.L2_reg, gamma=sharpe_gamma)
+
                     weights = ef.max_sharpe()
                     explain_text = (
                         "the highest risk-adjusted return (Sharpe Ratio) while "
