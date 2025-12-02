@@ -10,6 +10,11 @@ from pypfopt import risk_models, expected_returns
 from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
 from pypfopt import objective_functions
 
+RISK_COLORS = {
+    "Low": "#00E676",      # Green - Safe
+    "Medium": "#FFC400",   # Gold - Balanced
+    "High": "#FF1744",     # Red - Aggressive
+}
 
 # ---------------------------------------------------------
 # Utility: Compatible rerun for old & new Streamlit
@@ -45,6 +50,107 @@ def ensure_asset_state():
 # ---------------------------------------------------------
 def render_portfolio_optimizer():
     ensure_asset_state()
+    # ==============================
+    # GLOBAL UI / THEME STYLING
+    # ==============================
+    # Pick accent color based on risk appetite (default Medium if not selected yet)
+    accent = RISK_COLORS.get(st.session_state.get("risk", "Medium"), "#FFC400")
+
+    st.markdown(
+        f"""
+        <style>
+
+        /* GLOBAL BACKGROUND */
+        .main {{
+            background-color: #0A0F14 !important;
+        }}
+
+        /* BASE FONT */
+        html, body, [class*="css"] {{
+            font-family: 'Inter', sans-serif !important;
+            color: #E6EDF3 !important;
+        }}
+
+        /* PAGE HEADINGS */
+        h1, h2, h3, h4 {{
+            background: linear-gradient(90deg, {accent}, #ffffff);
+            -webkit-background-clip: text;
+            color: transparent !important;
+            font-weight: 700 !important;
+        }}
+
+        /* CONTAINERS (CARD STYLE) */
+        [data-testid="stContainer"] {{
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.25);
+            backdrop-filter: blur(10px);
+        }}
+
+        /* BUTTONS */
+        .stButton > button {{
+            background: {accent} !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+            border-radius: 12px !important;
+            padding: 10px 16px !important;
+            border: none !important;
+            transition: all 0.22s ease-in-out !important;
+        }}
+        .stButton > button:hover {{
+            transform: translateY(-3px) !important;
+            box-shadow: 0px 4px 15px {accent} !important;
+        }}
+
+        /* INPUTS & SELECTS */
+        input, textarea, select {{
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            color: #E6EDF3 !important;
+            border-radius: 12px !important;
+        }}
+        input:focus {{
+            border: 1px solid {accent} !important;
+            box-shadow: 0 0 8px {accent};
+        }}
+
+        /* TABS */
+        button[data-baseweb="tab"] {{
+            border-bottom: 3px solid transparent !important;
+            font-weight: 600 !important;
+            font-size: 16px !important;
+            opacity: 0.6;
+        }}
+        button[data-baseweb="tab"][aria-selected="true"] {{
+            border-bottom: 3px solid {accent} !important;
+            opacity: 1 !important;
+            color: {accent} !important;
+        }}
+
+        /* METRICS */
+        div[data-testid="stMetric"] {{
+            background: rgba(255,255,255,0.10);
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }}
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {{
+            width: 8px;
+        }}
+        ::-webkit-scrollbar-thumb {{
+            background: {accent};
+            border-radius: 10px;
+        }}
+
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # --- Add asset row ---
     def add_ticker():
