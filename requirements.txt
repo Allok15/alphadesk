@@ -1,6 +1,5 @@
 streamlit
-yfinance
-pandas
+yfinance>=0.2.40pandas
 numpy
 plotly
 PyPortfolioOpt
